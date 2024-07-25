@@ -20,7 +20,7 @@ public class UserDto {
 
     @NotBlank
     @Length(min = 2, max = 12)
-    @Pattern(regexp = "^[a-zA-Z0-9_-]{2,12}$")
+    @Pattern(regexp = "^[가-힣a-zA-Z0-9]{2,12}$")
     private String nickname;
 
     private String phoneNumber;

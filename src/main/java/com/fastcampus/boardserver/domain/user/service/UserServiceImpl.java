@@ -1,5 +1,7 @@
 package com.fastcampus.boardserver.domain.user.service;
 
+import com.fastcampus.boardserver.constant.Role;
+import com.fastcampus.boardserver.constant.Status;
 import com.fastcampus.boardserver.domain.user.User;
 import com.fastcampus.boardserver.domain.user.dto.*;
 import com.fastcampus.boardserver.domain.user.repository.UserRepository;
@@ -11,8 +13,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
+import static com.fastcampus.boardserver.constant.Role.USER;
 import static com.fastcampus.boardserver.constant.Status.*;
 import static com.fastcampus.boardserver.exception.BaseResponseStatus.*;
 import static com.fastcampus.boardserver.utils.SHA256.*;
@@ -27,26 +31,43 @@ public class UserServiceImpl implements UserService {
     private final HttpSession session;
 
     @Override
-    public void register(RegisterReq registerReq) {
+    @Transactional
+    public LoginRes register(RegisterReq registerReq) {
 
         // 비밀번호 암호화 메서드
-        encryptPassword(registerReq);
+        String encryptedPassword = encryptPassword(registerReq);
 
         // 중복 검사
-        isDuplicatedUserId(registerReq.getUserId());
-        isDuplicatedNickname(registerReq.getNickname());
-        isDuplicatedPhoneNumber(registerReq.getPhoneNumber());
+        Optional<User> findUserId = repository.findUserByUserIdAndStatus(registerReq.getUserId(), ACTIVE);
+        if (findUserId.isPresent()) {
+            throw new BaseException(POST_USERS_EXISTS_USER_ID);
+        }
 
+        Optional<User> findUserNickname = repository.findUserByNicknameAndStatus(registerReq.getNickname(), ACTIVE);
+        if (findUserId.isPresent()) {
+            throw new BaseException(POST_USERS_EXISTS_NICKNAME);
+        }
+
+        Optional<User> findUserPhoneNumber = repository.findUserByPhoneNumberAndStatus(registerReq.getPhoneNumber(), ACTIVE);
+        if (findUserId.isPresent()) {
+            throw new BaseException(POST_USERS_EXISTS_PHONE_NUMBER);
+        }
 
         User newUser = User.builder()
                 .userId(registerReq.getUserId())
-                .password(registerReq.getPassword())
+                .password(encryptedPassword)
                 .nickname(registerReq.getNickname())
                 .age(registerReq.getAge())
                 .phoneNumber(registerReq.getPhoneNumber())
+                .role(USER)
+                .status(ACTIVE)
+                .createTime(LocalDateTime.now())
                 .build();
 
+        log.info("new user: {}", newUser);
         repository.save(newUser);
+
+        return new LoginRes(newUser.getUserId(), newUser.getPassword());
     }
 
     @Override
@@ -162,12 +183,16 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    private static void encryptPassword(RegisterReq registerReq) {
+    private String encryptPassword(RegisterReq registerReq) {
+        String password;
         try {
-            encrypt(registerReq.getPassword());
+            password = encrypt(registerReq.getPassword());
+            log.info("encrypt password: {}", password);
         } catch (Exception e) {
             throw new BaseException(ENCRYPTION_ERROR);
         }
+
+        return password;
     }
 
     private User getSessionUser() {

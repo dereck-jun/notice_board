@@ -11,6 +11,9 @@ public class LoginRes {
     private String userId;
     private String password;
 
+    public LoginRes() {
+    }
+
     @Builder
     public LoginRes(String userId, String password) {
         this.userId = userId;

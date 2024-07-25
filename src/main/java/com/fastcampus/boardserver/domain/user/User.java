@@ -11,7 +11,8 @@ import java.util.Date;
 
 @Getter
 @Entity
-@Table(name = "User")
+@Table(name = "user")
+@ToString
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User {
 
@@ -46,12 +47,16 @@ public class User {
     private LocalDateTime updateTime;
 
     @Builder
-    public User(String userId, String password, String nickname, String phoneNumber, Integer age) {
+    public User(String userId, String password, String nickname, String phoneNumber,
+                Integer age, Role role, Status status, LocalDateTime createTime) {
         this.userId = userId;
         this.password = password;
         this.nickname = nickname;
         this.phoneNumber = phoneNumber;
         this.age = age;
+        this.role = role;
+        this.status = status;
+        this.createTime = createTime;
     }
 
     public void setStatusToDelete() {

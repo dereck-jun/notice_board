@@ -8,7 +8,7 @@ import java.util.Optional;
 public interface UserService {
 
     // 회원가입
-    void register(RegisterReq registerReq);
+    LoginRes register(RegisterReq registerReq);
 
     // 로그인
     LoginRes login(LoginReq loginReq);
