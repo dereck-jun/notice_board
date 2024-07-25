@@ -1,0 +1,25 @@
+package com.fastcampus.boardserver.domain.user.dto;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotBlank;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class PasswordReq {
+
+    private Integer userId;
+
+    @NotBlank
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String password;
+
+    @Builder
+    public PasswordReq(Integer userId, String password) {
+        this.userId = userId;
+        this.password = password;
+    }
+}
