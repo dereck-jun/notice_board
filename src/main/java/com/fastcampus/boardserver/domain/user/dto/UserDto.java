@@ -7,12 +7,14 @@ import jakarta.validation.constraints.Pattern;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
+import lombok.ToString;
 import org.hibernate.validator.constraints.Length;
 
 import java.time.LocalDateTime;
 import java.util.Date;
 
 @Getter
+@ToString
 @JsonInclude(JsonInclude.Include.NON_NULL)  // jackson 으로 데이터를 직렬화할 떄 값에 표시를 조절하는 어노테이션
 public class UserDto {
 

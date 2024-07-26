@@ -1,7 +1,5 @@
 package com.fastcampus.boardserver.domain.user.service;
 
-import com.fastcampus.boardserver.constant.Role;
-import com.fastcampus.boardserver.constant.Status;
 import com.fastcampus.boardserver.domain.user.User;
 import com.fastcampus.boardserver.domain.user.dto.*;
 import com.fastcampus.boardserver.domain.user.repository.UserRepository;
@@ -44,12 +42,12 @@ public class UserServiceImpl implements UserService {
         }
 
         Optional<User> findUserNickname = repository.findUserByNicknameAndStatus(registerReq.getNickname(), ACTIVE);
-        if (findUserId.isPresent()) {
+        if (findUserNickname.isPresent()) {
             throw new BaseException(POST_USERS_EXISTS_NICKNAME);
         }
 
         Optional<User> findUserPhoneNumber = repository.findUserByPhoneNumberAndStatus(registerReq.getPhoneNumber(), ACTIVE);
-        if (findUserId.isPresent()) {
+        if (findUserPhoneNumber.isPresent()) {
             throw new BaseException(POST_USERS_EXISTS_PHONE_NUMBER);
         }
 
@@ -71,7 +69,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public LoginRes login(LoginReq loginReq) {
+    public LoginRes login(LoginReq loginReq) {  // 휴면 유저나 탈퇴한 유저에 대한 것도 있어야 할 것 같음
 
         String userId = loginReq.getUserId();
         String password = loginReq.getPassword();   // encrypted password
@@ -79,12 +77,42 @@ public class UserServiceImpl implements UserService {
         User findUser = repository.findUserByUserIdAndStatus(userId, ACTIVE)
                 .orElseThrow(() -> new BaseException(FAILED_TO_LOGIN));
 
+        // 아이디와 비밀번호가 전부 일치하면 HttpSession 생성
         if (password.equals(findUser.getPassword())) {
-            session.setAttribute("loginUser", findUser);
-            session.setMaxInactiveInterval(60); // 세션 유효 시간 설정
-            return new LoginRes(userId, password);
+            try {
+                session.setAttribute("loginUser", findUser);
+                session.setMaxInactiveInterval(60); // 세션 유효 시간 설정
+                return new LoginRes(userId, password);
+            } catch (BaseException ignore) {
+                throw new BaseException(SESSION_CREATION_ERROR);
+            }
         } else {
             throw new BaseException(FAILED_TO_LOGIN);
+        }
+    }
+
+    @Override
+    public UserDto getUserProfile() {
+        User sessionUser = getSessionUser();
+
+        User findUser = repository.findUserByUserIdAndStatus(sessionUser.getUserId(), ACTIVE)
+                .orElseThrow(() -> new BaseException(CHECK_USER));
+        log.info("findUser: {}", findUser.toString());
+
+        if (findUser.getUpdateTime() == null) {
+            return UserDto.builder()
+                    .age(findUser.getAge())
+                    .nickname(findUser.getNickname())
+                    .phoneNumber(findUser.getPhoneNumber())
+                    .createTime(findUser.getCreateTime())
+                    .build();
+        } else {
+            return UserDto.builder()
+                    .age(findUser.getAge())
+                    .nickname(findUser.getNickname())
+                    .phoneNumber(findUser.getPhoneNumber())
+                    .updateTime(findUser.getUpdateTime())
+                    .build();
         }
     }
 
@@ -130,30 +158,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto getUserProfile() {
-        String userId = session.getAttribute("loginUserId").toString();
-
-        User findUser = repository.findUserByUserIdAndStatus(userId, ACTIVE)
-                .orElseThrow(() -> new BaseException(CHECK_USER));
-
-        if (findUser.getUpdateTime() == null) {
-            return UserDto.builder()
-                    .age(findUser.getAge())
-                    .nickname(findUser.getNickname())
-                    .phoneNumber(findUser.getPhoneNumber())
-                    .createTime(findUser.getCreateTime())
-                    .build();
-        } else {
-            return UserDto.builder()
-                    .age(findUser.getAge())
-                    .nickname(findUser.getNickname())
-                    .phoneNumber(findUser.getPhoneNumber())
-                    .updateTime(findUser.getUpdateTime())
-                    .build();
-        }
-    }
-
-    @Override
     public Boolean isDuplicatedUserId(String userId) {
         return repository.existsByUserIdAndStatus(userId, ACTIVE);
     }
@@ -187,7 +191,6 @@ public class UserServiceImpl implements UserService {
         String password;
         try {
             password = encrypt(registerReq.getPassword());
-            log.info("encrypt password: {}", password);
         } catch (Exception e) {
             throw new BaseException(ENCRYPTION_ERROR);
         }

@@ -33,7 +33,7 @@ public enum BaseResponseStatus {
     //    POST_EMPTY_EMAIL(false, 2201, "이메일은 필수 정보입니다.")
     POST_EMPTY_PHONE(false, 2203, "전화번호는 필수 정보입니다."),
     POST_EMPTY_PASSWORD(false, 2204, "비밀번호는 필수 정보입니다."),
-    SESSION_EMPTY(false, 2205, "세션이 만료되었습니다."),
+    SESSION_EMPTY(false, 2205, "세션이 만료되거나 세션이 없습니다."),
 
     USER_EMPTY_USER_ID(false, 2010, "유저 아이디 값을 확인해주세요."),
 
@@ -57,13 +57,12 @@ public enum BaseResponseStatus {
     RESPONSE_ERROR(false, 3000, "값을 불러오는데 실패했습니다."),
     RESPONSE_EMPTY(false, 3001, "조회할 정보가 없습니다."),
     DELETE_EMPTY(false, 3002, "삭제할 정보가 없습니다."),
-    SESSION_NOT_FOUND(false, 3003, "세션에서 값을 불러오는데 실패했습니다."),
+    SESSION_CREATION_ERROR(false, 3003, "세션을 생성하는데 실패했습니다."),
 
     // [POST]
     FAILED_TO_LOGIN(false, 3011, "없는 아이디거나, 비밀번호가 틀렸습니다."),
-
-    // [POST]
     SEARCH_NOT_FOUND_POST(false, 3012, "조회된 포스트가 없습니다."),
+    SESSION_NOT_FOUND(false, 3013, "세션에서 값을 불러오는데 실패했습니다."),
 
     /**
      * 4000 - DataBase, Server 오류

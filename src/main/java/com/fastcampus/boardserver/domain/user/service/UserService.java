@@ -13,6 +13,9 @@ public interface UserService {
     // 로그인
     LoginRes login(LoginReq loginReq);
 
+    // 회원 정보 조회
+    UserDto getUserProfile();
+
     // 회원 정보 수정
     Long editUserProfile(EditMemberReq editMemberReq);  // 영향을 받은 row 수를 반환
 
@@ -21,9 +24,6 @@ public interface UserService {
 
     // 회원 탈퇴
     Long statusToDeleteUser();
-
-    // 회원 정보 조회
-    UserDto getUserProfile();
 
     // 아이디 중복 검사
     Boolean isDuplicatedUserId(String userId);
