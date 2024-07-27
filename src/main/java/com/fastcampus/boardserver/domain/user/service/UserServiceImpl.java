@@ -83,7 +83,7 @@ public class UserServiceImpl implements UserService {
                 session.setAttribute("loginUser", findUser);
                 session.setMaxInactiveInterval(60); // 세션 유효 시간 설정
                 return new LoginRes(userId, password);
-            } catch (BaseException ignore) {
+            } catch (BaseException ignored) {
                 throw new BaseException(SESSION_CREATION_ERROR);
             }
         } else {
@@ -123,9 +123,15 @@ public class UserServiceImpl implements UserService {
         Boolean duplicatedNickname = isDuplicatedNickname(editMemberReq.getNickname());
         if (Boolean.TRUE.equals(duplicatedNickname)) {
             throw new BaseException(POST_USERS_EXISTS_NICKNAME);
-        } else {
-            return sessionUser.getId();
         }
+
+        User findUser = repository.findUserByUserIdAndStatus(sessionUser.getUserId(), ACTIVE)
+                .orElseThrow(() -> new BaseException(CHECK_USER));
+
+        findUser.editUserInfo(editMemberReq.getNickname(), editMemberReq.getAge());
+
+        return findUser.getId();
+
     }
 
     @Override
@@ -134,13 +140,13 @@ public class UserServiceImpl implements UserService {
         String password = encrypt(passwordReq.getPassword());
 
         // repository에서 회원 찾은 뒤에 password 변경
-        User editedUser = repository.findUserByUserIdAndStatus(sessionUser.getUserId(), ACTIVE)
+        User findUser = repository.findUserByUserIdAndStatus(sessionUser.getUserId(), ACTIVE)
                 .orElseThrow(() -> new BaseException(CHECK_USER));
-        editedUser.setPassword(password);
+        findUser.setPassword(password);
 
         // session 재발급
         session.removeAttribute("loginUser");
-        session.setAttribute("loginUser", editedUser);
+        session.setAttribute("loginUser", findUser);
 
         User newSessionUser = (User) session.getAttribute("loginUser");
 
@@ -153,6 +159,12 @@ public class UserServiceImpl implements UserService {
 
         repository.findUserByUserIdAndStatus(sessionUser.getUserId(), ACTIVE)
                 .orElseThrow(() -> new BaseException(NOT_TO_DELETE)).setStatusToDelete();
+
+        try {
+            session.removeAttribute("loginUser");
+        } catch (BaseException ignored) {
+            throw new BaseException(FAILED_TO_REMOVE_SESSION);
+        }
 
         return sessionUser.getId();
     }

@@ -19,25 +19,11 @@ public class EditMemberReq {
 
     private int age;
 
-    private String phoneNumber;
-
-    @Builder
-    public EditMemberReq(String nickname, int age, String phoneNumber) {
-        this.nickname = nickname;
-        this.age = age;
-        this.phoneNumber = phoneNumber;
-    }
 
     @Builder
     public EditMemberReq(String nickname, int age) {
         this.nickname = nickname;
         this.age = age;
-    }
-
-    @Builder
-    public EditMemberReq(String nickname, String phoneNumber) {
-        this.nickname = nickname;
-        this.phoneNumber = phoneNumber;
     }
 
     @Builder

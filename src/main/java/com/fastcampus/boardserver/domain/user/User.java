@@ -12,7 +12,6 @@ import java.util.Date;
 @Getter
 @Entity
 @Table(name = "user")
-@ToString
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User {
 
@@ -61,5 +60,43 @@ public class User {
 
     public void setStatusToDelete() {
         this.status = Status.DELETED;
+    }
+
+    public void editUserInfo(String nickname, Integer age) {
+        this.nickname = nickname;
+        this.age = age;
+    }
+
+    public void editUserNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    @Override
+    public String toString() {
+        if (updateTime == null) {
+            return "User{" +
+                    "id=" + id +
+                    ", userId='" + userId + '\'' +
+                    ", password='" + password + '\'' +
+                    ", nickname='" + nickname + '\'' +
+                    ", age=" + age +
+                    ", phoneNumber='" + phoneNumber + '\'' +
+                    ", role=" + role +
+                    ", status=" + status +
+                    ", createTime=" + createTime +
+                    '}';
+        } else {
+            return "User{" +
+                    "id=" + id +
+                    ", userId='" + userId + '\'' +
+                    ", password='" + password + '\'' +
+                    ", nickname='" + nickname + '\'' +
+                    ", age=" + age +
+                    ", phoneNumber='" + phoneNumber + '\'' +
+                    ", role=" + role +
+                    ", status=" + status +
+                    ", updateTime=" + updateTime +
+                    '}';
+        }
     }
 }

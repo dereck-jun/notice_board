@@ -22,6 +22,7 @@ public enum BaseResponseStatus {
     EMPTY_PARAMETER(false, 2007, "파라미터 값을 확인해주세요."),
     NOT_TO_DELETE(false, 2010, "삭제할 대상이 없습니다."),
     WRONG_ACCESS(false, 2011, "잘못된 접근입니다."),
+    FAILED_TO_REMOVE_SESSION(false, 2012, "세션을 삭제하지 못했습니다."),
 
     // Common 형식 관련: 2100 ~
 //    INVALID_EMAIL(false, 2101, "올바른 이메일 형식을 입력해주세요."),

@@ -1,13 +1,10 @@
 package com.fastcampus.boardserver.domain.user.service;
 
+import com.fastcampus.boardserver.constant.Status;
 import com.fastcampus.boardserver.domain.user.User;
-import com.fastcampus.boardserver.domain.user.dto.LoginReq;
-import com.fastcampus.boardserver.domain.user.dto.LoginRes;
-import com.fastcampus.boardserver.domain.user.dto.RegisterReq;
-import com.fastcampus.boardserver.domain.user.dto.UserDto;
+import com.fastcampus.boardserver.domain.user.dto.*;
 import com.fastcampus.boardserver.domain.user.repository.UserRepository;
 import com.fastcampus.boardserver.exception.BaseException;
-import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
@@ -17,6 +14,7 @@ import org.springframework.mock.web.MockHttpSession;
 
 import java.util.Optional;
 
+import static com.fastcampus.boardserver.constant.Status.*;
 import static com.fastcampus.boardserver.constant.Status.ACTIVE;
 import static com.fastcampus.boardserver.exception.BaseResponseStatus.*;
 import static com.fastcampus.boardserver.utils.SHA256.encrypt;
@@ -38,8 +36,9 @@ class UserServiceImplTest {
 
     @AfterEach
     void clearSession() {
-        session.clearAttributes();
-        session = null;
+        if (session != null) {
+            session.clearAttributes();
+        }
     }
 
     @Test
@@ -225,7 +224,7 @@ class UserServiceImplTest {
         session.setAttribute("loginUser", null);
 
 
-        BaseException exception = assertThrows(BaseException.class, this::getSessionUser);
+        BaseException exception = assertThrows(BaseException.class, () -> getSessionUser());
         assertEquals(SESSION_EMPTY.getCode(), exception.getStatus().getCode());
     }
 
@@ -235,13 +234,7 @@ class UserServiceImplTest {
     void getUserProfile() {
 
         // given
-        LoginReq loginReq = LoginReq.builder()
-                .userId("tester")
-                .password(encrypt("tester123!"))
-                .build();
-
-        // when
-        LoginRes loginRes = service.login(loginReq);
+        LoginRes loginRes = loginToTester();
 
         session = new MockHttpSession();
         session.setAttribute("loginUser", loginRes);
@@ -253,9 +246,118 @@ class UserServiceImplTest {
         assertNotNull(userProfile);
     }
 
-    User getSessionUser() {
-        session = new MockHttpSession();
+    @Test
+    @DisplayName("04-1 회원 정보 수정")
+    @Order(11)
+    void editUserProfile() {
 
+        // given
+        LoginRes loginRes = loginToTester();
+        session = new MockHttpSession();
+        session.setAttribute("loginUser", loginRes);
+
+        EditMemberReq editUser = EditMemberReq.builder()
+                .nickname("hihi")
+                .age(11)
+                .build();
+
+        // when
+        Long userId = service.editUserProfile(editUser);
+        log.info("userId: {}", userId);
+
+        //then
+        assertThat(userId).isEqualTo(repository.findById(userId).get().getId());
+    }
+
+    @Test
+    @DisplayName("04-2 회원 정보 수정 실패")
+    @Order(12)
+    void editUserProfileFailed() {
+
+        // given
+        LoginRes loginRes = loginToTester();
+        session = new MockHttpSession();
+        session.setAttribute("loginUser", loginRes);
+
+        EditMemberReq editUser = EditMemberReq.builder()
+                .nickname("나비")
+                .age(20)
+                .build();
+
+        // when & then
+        BaseException exception = assertThrows(BaseException.class, () -> service.editUserProfile(editUser));
+        assertEquals(POST_USERS_EXISTS_NICKNAME.getCode(), exception.getStatus().getCode());
+    }
+
+    @Test
+    @DisplayName("05-1 패스워드 수정")
+    @Order(13)
+    void editPassword() {
+
+        // given
+        LoginRes loginRes = loginToTester();
+        session = new MockHttpSession();
+        session.setAttribute("loginUser", loginRes);
+
+        PasswordReq editPassword = PasswordReq.builder()
+                .id(6L)
+                .password("qwerty123!")
+                .build();
+
+        // when
+        Long userId = service.editPassword(editPassword);
+
+        // then
+        assertThat(userId).isEqualTo(repository.findById(userId).get().getId());
+    }
+
+    @Test
+    @DisplayName("06-1. 회원 탈퇴")
+    @Order(14)
+    void statusToDeleteUser() {
+
+        // given
+        LoginRes loginRes = loginToTester();
+        session = new MockHttpSession();
+        session.setAttribute("loginUser", loginRes);
+
+        // when
+        Long userId = service.statusToDeleteUser();
+        User findUser = repository.findById(userId).get();
+
+        // then
+        assertThat(findUser.getStatus()).isEqualTo(DELETED);
+        log.info("getStatusToFindUser: {}", findUser.getStatus());
+    }
+
+    @Test
+    @DisplayName("06-2. 이미 탈퇴한 회원")
+    @Order(15)
+    void statusToDeleteUserFailed() {
+
+        // given
+        LoginRes loginRes = loginToTester();
+        session = new MockHttpSession();
+        session.setAttribute("loginUser", loginRes);
+
+
+        // when & then
+        service.statusToDeleteUser();
+        BaseException exception = assertThrows(BaseException.class, () -> service.statusToDeleteUser());
+        assertEquals(SESSION_EMPTY.getCode(), exception.getStatus().getCode());
+    }
+
+    private LoginRes loginToTester() {  // LOGIN TO ACTIVE USER
+        LoginReq loginReq = LoginReq.builder()
+                .userId("tester")
+                .password(encrypt("tester123!"))
+                .build();
+
+        LoginRes loginRes = service.login(loginReq);
+        return loginRes;
+    }
+
+    private User getSessionUser() {
         User sessionUser = (User) session.getAttribute("loginUser");
         if (sessionUser == null) {
             throw new BaseException(SESSION_EMPTY);

@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PasswordReq {
 
-    private Integer userId;
+    private Long id;
 
     @NotBlank
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
@@ -20,8 +20,8 @@ public class PasswordReq {
     private String password;
 
     @Builder
-    public PasswordReq(Integer userId, String password) {
-        this.userId = userId;
+    public PasswordReq(Long id, String password) {
+        this.id = id;
         this.password = password;
     }
 }
